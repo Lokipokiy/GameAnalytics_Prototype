@@ -2,17 +2,17 @@ using UnityEngine;
 
 public class DestroyInstruc : MonoBehaviour
 {
-    public GameObject batIntruc;
+    //public GameObject batIntruc;
     public GameObject goblinInstruc;
-    public GameObject skeletonInstruc;
-    public GameObject gemInstruc;
-    public GameObject stalactiteInstruc;
+    //public GameObject skeletonInstruc;
+    //public GameObject gemInstruc;
+    //public GameObject stalactiteInstruc;
     public void Destroy()
     {
-        Destroy(batIntruc);
+        //Destroy(batIntruc);
         Destroy(goblinInstruc);
-        Destroy(skeletonInstruc);
-        Destroy(gemInstruc);
-        Destroy(stalactiteInstruc);
+        //Destroy(skeletonInstruc);
+        //Destroy(gemInstruc);
+       // Destroy(stalactiteInstruc);
     }
 }

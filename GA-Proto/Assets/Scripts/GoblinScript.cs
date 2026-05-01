@@ -12,7 +12,7 @@ public class GoblinScript : MonoBehaviour
 
     public float moveDistance = 3;
 
-    public float attackRange = .5f;
+    public float attackRange = 1f;
 
     public float detectionRange = 5f;
     public float moveSpeed = 2f;
@@ -23,8 +23,8 @@ public class GoblinScript : MonoBehaviour
 
     Animator anim;
 
-    public AudioSource death;
-    public AudioSource attack;
+    //public AudioSource death;
+    //public AudioSource attack;
 
 
 
@@ -104,7 +104,7 @@ public class GoblinScript : MonoBehaviour
         if (Vector2.Distance(transform.position, playerScript.transform.position) <= attackRange)
         {
             anim.SetTrigger("Attack");
-            attack.Play();
+            //attack.Play();
             playerScript.Health();
             WaitForSeconds wait = new WaitForSeconds(0.5f);
         }
@@ -115,7 +115,7 @@ public class GoblinScript : MonoBehaviour
     public void Death()
     {
         Debug.Log("Goblin Dies!");
-        death.Play();
+        //death.Play();
         anim.SetTrigger("Death");
         gameObject.SetActive(false);
     }

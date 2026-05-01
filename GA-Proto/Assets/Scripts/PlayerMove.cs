@@ -1,10 +1,12 @@
+using System.Collections;
+using TMPro;
+using Unity.Burst.Intrinsics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SocialPlatforms.Impl;
-using TMPro;
 using UnityEngine.SceneManagement;
-using System.Collections;
+using UnityEngine.SocialPlatforms.Impl;
+using static Unity.VisualScripting.Member;
 
 public class PlayerScript : MonoBehaviour
 {
@@ -12,10 +14,10 @@ public class PlayerScript : MonoBehaviour
     float moveInput;
     public Vector3 spawnPoint;
 
-    public TMP_Text scoreText;
-    public int score;
+    //public TMP_Text scoreText;
+    //public int score;
 
-    int gemValue = 5;
+    //int gemValue = 5;
 
     public GemScript[] gemScript;
     public GoblinScript[] goblinScript;
@@ -26,17 +28,29 @@ public class PlayerScript : MonoBehaviour
     public int health;
     public GameObject[] hearts;
 
-    public AudioSource attack;
-    public AudioSource death;
-    public AudioSource collect;
-    public AudioSource hurt;
-    public AudioSource walk;
-    public AudioSource heal;
+    [SerializeField] GameObject bullet;
+    [SerializeField] float bulletSpeed = 18.0f;
+    bool fired = false;
+    [SerializeField] Transform bulletspawnpoint;
+    Vector3 mouseWP, rot;
+    float rotZ;
+    private Camera mainCam;
+    [SerializeField] GameObject aim;
 
-    BoxCollider2D collider;
+    //Audio
+    //public AudioSource attack;
+    //public AudioSource death;
+    //public AudioSource collect;
+    //public AudioSource hurt;
+    //public AudioSource walk;
+    //public AudioSource heal;
 
+    BoxCollider2D Boxcollider;
 
-
+    //Weapon Types
+    bool melee = true;
+    bool range = false;
+    bool trap = false;
 
     bool facingRight = true;
     bool isCrouching = false;
@@ -51,7 +65,8 @@ public class PlayerScript : MonoBehaviour
         spawnPoint = this.transform.position;
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        collider = GetComponent<BoxCollider2D>();
+        Boxcollider = GetComponent<BoxCollider2D>();
+        mainCam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
         health = 5;
     }
 
@@ -60,8 +75,9 @@ public class PlayerScript : MonoBehaviour
     {
          rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocityY);
 
-        
-         if(moveInput!=0)
+        MouseDetection();
+
+        if (moveInput!=0)
          {
             anim.SetBool("isWalking", true);
          }
@@ -79,13 +95,41 @@ public class PlayerScript : MonoBehaviour
         {
             Flip();
         }
+
+        if(Input.GetKey(KeyCode.Keypad1) && !melee)
+        {
+            melee = true;
+        }
+        else
+        {
+            melee = false;
+        }
+
+        if (Input.GetKey(KeyCode.Keypad2) && !range)
+        {
+            range = true;
+        }
+        else
+        {
+            range = false;
+        }
+
+        if (Input.GetKey(KeyCode.Keypad3) && !trap)
+        {
+            trap = true;
+        }
+        else
+        {
+            trap = false;
+        }
+        
     }
 
     public void Move(InputAction.CallbackContext ctx)
     {
         if (ctx.performed)
         {
-           walk.Play();
+           //.Play();
            if (isCrouching)
             {
                 moveInput = 0f;
@@ -98,7 +142,7 @@ public class PlayerScript : MonoBehaviour
         {
             moveInput = 0f;
             anim.SetBool("isWalking", false);
-            walk.Stop();
+            //walk.Stop();
         }
 
     }
@@ -145,7 +189,7 @@ public class PlayerScript : MonoBehaviour
         if (health > 0)
         {
             anim.SetTrigger("Hurt");
-            hurt.Play();
+            //hurt.Play();
             health -= 1;
             if (health == 4)
             {
@@ -166,7 +210,7 @@ public class PlayerScript : MonoBehaviour
         }
 
         Debug.Log("Player Health: " + health.ToString());
-        hearts[health].SetActive(false);
+        //hearts[health].SetActive(false);
         if (health <= 0)
         {
             StartCoroutine(DeathAnim());
@@ -201,7 +245,7 @@ public class PlayerScript : MonoBehaviour
                 }
                 health = 5;
                 anim.SetTrigger("Heal");
-                heal.Play();
+                //heal.Play();
                 skeleton.Death();
             }
         }
@@ -210,36 +254,70 @@ public class PlayerScript : MonoBehaviour
 
     public void Attack(InputAction.CallbackContext ctx)
     {
-        if (!ctx.performed) return;
-        moveInput = 0f;
-        Debug.Log("Attack");
-        anim.SetTrigger("Attack");
-        attack.Play();
-        Vector2 direction = !facingRight ? Vector2.left : Vector2.right;
-        Vector2 origin = (Vector2)transform.position + direction * 0.5f;
-
-        Debug.DrawRay(origin, direction * 2f, Color.red, 0.5f);
-
-        int goblinLayer = LayerMask.GetMask("Goblin");
-
-        RaycastHit2D hit = Physics2D.Raycast(origin, direction, 3f, goblinLayer);
-
-        if (hit.collider != null)
+        if (melee == true)
         {
-            Debug.Log("Hit: " + hit.collider.name);
+            if (!ctx.performed) return;
+            moveInput = 0f;
+            Debug.Log("Attack");
+            anim.SetTrigger("Attack");
+            //attack.Play();
+            Vector2 direction = !facingRight ? Vector2.left : Vector2.right;
+            Vector2 origin = (Vector2)transform.position + direction * 0.5f;
 
-            GoblinScript goblin = hit.collider.GetComponentInParent<GoblinScript>();
-            if (goblin != null)
+            Debug.DrawRay(origin, direction * 2f, Color.red, 0.5f);
+
+            int goblinLayer = LayerMask.GetMask("Goblin");
+
+            RaycastHit2D hit = Physics2D.Raycast(origin, direction, 3f, goblinLayer);
+
+            if (hit.collider != null)
             {
-                goblin.TakeDamage(50);
-               
-            }
-            if (goblin.health <= 0)
-            {
-                score += 10;
-                scoreText.text = "Score - " + score.ToString();
+                Debug.Log("Hit: " + hit.collider.name);
+
+                GoblinScript goblin = hit.collider.GetComponentInParent<GoblinScript>();
+                if (goblin != null)
+                {
+                    goblin.TakeDamage(50);
+
+                }
+                if (goblin.health <= 0)
+                {
+                    //score += 10;
+                    //scoreText.text = "Score - " + score.ToString();
+                }
             }
         }
+
+        //if(range == true)
+        //{
+        //    if (!ctx.performed) return;
+        //    moveInput = 0f;
+        //    Debug.Log("Attack");
+        //    anim.SetTrigger("Attack");
+
+        //    if (!fired) StartCoroutine(FireProjectile());
+
+        //    int goblinLayer = LayerMask.GetMask("Goblin");
+
+
+        //    if (bullet.co)
+        //    {
+        //        Debug.Log("Hit: " + hit.collider.name);
+
+        //        GoblinScript goblin = hit.collider.GetComponentInParent<GoblinScript>();
+        //        if (goblin != null)
+        //        {
+        //            goblin.TakeDamage(50);
+
+        //        }
+        //        if (goblin.health <= 0)
+        //        {
+        //            //score += 10;
+        //            //scoreText.text = "Score - " + score.ToString();
+        //        }
+        //    }
+        //}
+
 
     }
 
@@ -266,11 +344,11 @@ public class PlayerScript : MonoBehaviour
         {
             Debug.Log("Gem Collected");
             collision.gameObject.SetActive(false);
-            collect.Play();
-            score += gemValue;  
-            scoreText.text = "Score - " + score.ToString();
+            //collect.Play();
+            //score += gemValue;  
+            //scoreText.text = "Score - " + score.ToString();
         }
-        if (collision.gameObject.CompareTag("Goblin"))
+        if (collision.gameObject.CompareTag("Enemy"))
         {
             Attack(new InputAction.CallbackContext());
         }
@@ -285,11 +363,12 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+    
 IEnumerator DeathAnim()
 {
-    death.Play();
+    //death.Play();
     anim.SetTrigger("Death");
-    collider.enabled = false;
+    GetComponent<Collider>().enabled = false;
     yield return new WaitForSeconds(1.5f); // wait for animation
     SceneManager.LoadScene(4);
 } 
@@ -305,4 +384,22 @@ private void OnDrawGizmos()
             Gizmos.DrawLine(transform.position, transform.position + Vector3.left * 2f);
         }
     }
+
+    void MouseDetection()
+    {
+        mouseWP = mainCam.ScreenToWorldPoint(Input.mousePosition);
+        rot = mouseWP - aim.transform.position;
+        rotZ = Mathf.Atan2(rot.y, rot.x) * Mathf.Rad2Deg;
+        aim.transform.rotation = Quaternion.Euler(0, 0, rotZ);
+    }
+
+    IEnumerator FireProjectile()
+    {
+        fired = true;
+        var fb = Instantiate(bullet, bulletspawnpoint.position, aim.transform.rotation);
+        fb.GetComponent<Rigidbody2D>().AddForce(rot * bulletSpeed, ForceMode2D.Impulse);
+        yield return new WaitForSeconds(.15f);
+        fired = false;
+    }
+
 }
