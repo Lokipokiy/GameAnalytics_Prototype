@@ -12,30 +12,28 @@ public class PlayerScript : MonoBehaviour
     float moveInput;
     public Vector3 spawnPoint;
 
-    //Score
-    //public TMP_Text scoreText;
-    //public int score;
+    public TMP_Text scoreText;
+    public int score;
 
     int gemValue = 5;
 
-    //public GemScript[] gemScript;
-    //public GoblinScript[] goblinScript;
-    //public SkeletonScript[] skeletonScript;
-    //public BatScript batScript;
-    //public DestroyInstruc destroyScript;
+    public GemScript[] gemScript;
+    public GoblinScript[] goblinScript;
+    public SkeletonScript[] skeletonScript;
+    public BatScript batScript;
+    public DestroyInstruc destroyScript;
 
     public int health;
     public GameObject[] hearts;
 
-    //Audio
-    //public AudioSource attack;
-    //public AudioSource death;
-    //public AudioSource collect;
-    //public AudioSource hurt;
-    //public AudioSource walk;
-    //public AudioSource heal;
+    public AudioSource attack;
+    public AudioSource death;
+    public AudioSource collect;
+    public AudioSource hurt;
+    public AudioSource walk;
+    public AudioSource heal;
 
-    CapsuleCollider2D collider;
+    BoxCollider2D collider;
 
 
 
@@ -53,7 +51,7 @@ public class PlayerScript : MonoBehaviour
         spawnPoint = this.transform.position;
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        collider = GetComponent<CapsuleCollider2D>();
+        collider = GetComponent<BoxCollider2D>();
         health = 5;
     }
 
@@ -87,7 +85,7 @@ public class PlayerScript : MonoBehaviour
     {
         if (ctx.performed)
         {
-           //walk.Play();
+           walk.Play();
            if (isCrouching)
             {
                 moveInput = 0f;
@@ -100,7 +98,7 @@ public class PlayerScript : MonoBehaviour
         {
             moveInput = 0f;
             anim.SetBool("isWalking", false);
-            //walk.Stop();
+            walk.Stop();
         }
 
     }
@@ -147,7 +145,7 @@ public class PlayerScript : MonoBehaviour
         if (health > 0)
         {
             anim.SetTrigger("Hurt");
-            //hurt.Play();
+            hurt.Play();
             health -= 1;
             if (health == 4)
             {
@@ -203,7 +201,7 @@ public class PlayerScript : MonoBehaviour
                 }
                 health = 5;
                 anim.SetTrigger("Heal");
-                //heal.Play();
+                heal.Play();
                 skeleton.Death();
             }
         }
@@ -216,7 +214,7 @@ public class PlayerScript : MonoBehaviour
         moveInput = 0f;
         Debug.Log("Attack");
         anim.SetTrigger("Attack");
-        //attack.Play();
+        attack.Play();
         Vector2 direction = !facingRight ? Vector2.left : Vector2.right;
         Vector2 origin = (Vector2)transform.position + direction * 0.5f;
 
@@ -238,8 +236,8 @@ public class PlayerScript : MonoBehaviour
             }
             if (goblin.health <= 0)
             {
-                //score += 10;
-                //scoreText.text = "Score - " + score.ToString();
+                score += 10;
+                scoreText.text = "Score - " + score.ToString();
             }
         }
 
@@ -253,24 +251,24 @@ public class PlayerScript : MonoBehaviour
             this.transform.position = spawnPoint;
             for (int i = 0; i < 6; i++)
             {
-                //gemScript[i].Reactivate();
-                //goblinScript[i].Reactivate();
+                gemScript[i].Reactivate();
+                goblinScript[i].Reactivate();
                 
             }
             for (int i = 0; i < 2; i++)
             {
-                //skeletonScript[i].Reactivate();
+                skeletonScript[i].Reactivate();
             }
-            //batScript.Reactivate();
-            //destroyScript.Destroy();
+            batScript.Reactivate();
+            destroyScript.Destroy();
         }
         if (collision.gameObject.CompareTag("Gem"))
         {
             Debug.Log("Gem Collected");
             collision.gameObject.SetActive(false);
-            //collect.Play();
-            //score += gemValue;  
-            //scoreText.text = "Score - " + score.ToString();
+            collect.Play();
+            score += gemValue;  
+            scoreText.text = "Score - " + score.ToString();
         }
         if (collision.gameObject.CompareTag("Goblin"))
         {
@@ -289,7 +287,7 @@ public class PlayerScript : MonoBehaviour
 
 IEnumerator DeathAnim()
 {
-    //death.Play();
+    death.Play();
     anim.SetTrigger("Death");
     collider.enabled = false;
     yield return new WaitForSeconds(1.5f); // wait for animation
